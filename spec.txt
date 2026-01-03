@@ -1,0 +1,367 @@
+PROJECT NAME
+Readiscover
+
+TAGLINE
+Rediscover research papers through guided deep learning.
+
+GOAL
+Readiscover is a web application that helps researchers deeply understand arXiv
+papers by guiding them through an interactive, question-driven rediscovery of the
+paper's ideas using LLMs.
+
+The system adapts to what the user already knows and uses the full LaTeX source
+structure (including nested files and figures) to generate high-quality,
+figure-aware explanations.
+
+No data persistence.
+No accounts.
+No analytics.
+All data is ephemeral and session-scoped.
+
+TARGET USERS
+~10 trusted users at a time (researchers).
+Users provide their own OpenRouter API key.
+
+REPOSITORY
+https://github.com/7vik/readiscover
+
+DEPLOYMENT URLS
+Frontend: https://readiscover.7vik.io
+Backend API: https://api.readiscover.7vik.io
+
+────────────────────────────────────────
+ARCHITECTURE OVERVIEW
+────────────────────────────────────────
+
+Frontend:
+- Static single-page application
+- HTML / CSS / Vanilla JavaScript
+- Hosted on GitHub Pages
+- Handles UI, chat, LaTeX rendering, figure display
+- Allows user to edit prior knowledge while backend is processing
+
+Backend:
+- Cloudflare Worker
+- Handles:
+  - arXiv source fetching
+  - Full directory reconstruction
+  - LaTeX + figure mapping
+  - LLM summarization using full source
+  - Interactive dialogue logic
+- No persistence, no logs, no storage
+- In-memory session management during active use
+
+────────────────────────────────────────
+FRONTEND SPEC
+────────────────────────────────────────
+
+FILES
+- index.html
+- styles.css
+- main.js
+
+DESIGN GOALS
+- Warm, elegant, academic aesthetic inspired by Distill.pub
+- Centered layout on desktop (max-width ~720px)
+- Empty space on both sides
+- Subtle background animation (gradient drift or particle motion)
+- Clear typography and generous spacing
+- Smooth transitions during long backend operations
+- Beautiful, artistic presentation befitting a research tool
+
+TYPOGRAPHY
+- LaTeX-friendly fonts: ET Book, Source Serif 4, or similar serif fonts
+- Math rendering: MathJax v3
+- Clear distinction between:
+  - system messages
+  - tutor messages
+  - user messages
+
+COLOR SCHEME
+- Warm academic palette
+- Earth tones, soft gradients
+- High contrast for readability
+- Subtle animations throughout
+
+────────────────────────────────────────
+USER KNOWLEDGE FILE (NEW)
+────────────────────────────────────────
+
+USER KNOWLEDGE MODEL
+- Represented as a plain-text editable document
+- Default contents pre-filled by frontend
+- Editable while backend is processing the paper
+
+DEFAULT CONTENT (EXAMPLE)
+I already know about:
+- Transformer architecture
+- Backpropagation
+- Gradient-based optimization
+- LLM inference and decoding
+- Basic probability and linear algebra
+
+FRONTEND BEHAVIOR
+- Show a collapsible editor panel labeled:
+  “What I already know”
+- Rendered as a textarea synced to a local variable
+- User can freely edit during preprocessing
+- When preprocessing completes:
+  - Latest version of this text is sent to backend
+  - Used by LLM to adapt explanations and skip basics
+
+BACKEND USAGE
+- User knowledge text is passed to:
+  - summarizer model (anthropic/claude-opus-4.5)
+  - dialogue tutor model (anthropic/claude-sonnet-4.5)
+- Used as conditioning context, never evaluated or modified
+
+────────────────────────────────────────
+FRONTEND UX FLOW
+────────────────────────────────────────
+
+INITIAL STATE
+- Title: “Readiscover”
+- arXiv URL input
+- OpenRouter API key input (masked)
+- “Begin Readiscovery” button
+
+ON SUBMIT
+- Inputs disabled
+- Transition to loading state
+- Display:
+  - Animated background
+  - Step indicators:
+    - "Downloading arXiv source…"
+    - "Reconstructing file tree…"
+    - "Parsing LaTeX…"
+    - "Indexing figures…"
+    - "Analyzing paper structure…"
+
+- User knowledge editor remains editable during this phase
+
+CHAT INTERFACE
+- Scrollable message area
+- Input at bottom
+- Progress indicator:
+  “Concept X of Y”
+
+LATEX & FIGURE RENDERING
+- MathJax for equations
+- Figures rendered inline when referenced
+- Click-to-expand for large figures
+- Captions shown below figures
+
+SESSION END
+- Final message:
+  “Thank you for rediscovering this paper.”
+- Button: “Start another paper”
+- Full frontend state reset
+
+────────────────────────────────────────
+FRONTEND → BACKEND API
+────────────────────────────────────────
+
+POST /session/start
+{
+  "arxiv_url": "https://arxiv.org/abs/2401.01234",
+  "openrouter_api_key": "sk-...",
+  "user_knowledge_text": "I already know about:\n- Transformers\n- ..."
+}
+
+POST /session/answer
+{
+  "session_id": "uuid",
+  "user_answer": "..."
+}
+
+────────────────────────────────────────
+BACKEND SPEC (CLOUDFLARE WORKER)
+────────────────────────────────────────
+
+GENERAL RULES
+- In-memory only (simple Map-based session storage)
+- Session timeout after inactivity (30 minutes)
+- No persistence beyond active session
+- No logs of content or API keys
+- Sessions automatically cleared when user completes or abandons paper
+
+SESSION STRUCTURE
+session = {
+  session_id: UUID,
+  openrouter_api_key: string,
+  user_knowledge_text: string,
+  file_tree: {...},
+  paper_index: {...},
+  concepts: [...],
+  dialogue_state: {...},
+  last_activity: timestamp
+}
+
+────────────────────────────────────────
+ARXIV SOURCE HANDLING (DETAILED)
+────────────────────────────────────────
+
+1. Fetch arXiv source
+   - Accept formats: https://arxiv.org/abs/2504.04072 OR
+                     https://arxiv.org/pdf/2504.04072 OR
+                     2504.04072
+   - Convert to: https://arxiv.org/src/2504.04072
+   - Download .tar.gz
+   - Graceful error handling if source unavailable (with retry option)
+
+2. Decompress archive in memory
+
+3. Reconstruct FULL DIRECTORY TREE
+   - Preserve all paths
+   - Example:
+     /
+       main.tex
+       sections/
+         intro.tex
+         method.tex
+       figures/
+         fig1.pdf
+         fig2.png
+       macros/
+         defs.tex
+
+4. Build FILE INDEX
+{
+  "files": [
+    {
+      "path": "sections/method.tex",
+      "type": "tex",
+      "content": "..."
+    },
+    {
+      "path": "figures/fig1.pdf",
+      "type": "image",
+      "format": "pdf",
+      "binary": <bytes>
+    }
+  ]
+}
+
+────────────────────────────────────────
+LATEX + FIGURE PROCESSING
+────────────────────────────────────────
+
+- Identify main LaTeX file:
+  - \documentclass
+  - Follow \input and \include recursively
+- Keep ALL .tex files available to LLM with path context
+- Extract:
+  - Section structure
+  - Figure references (\includegraphics)
+  - Captions
+  - Labels
+
+FIGURE SUPPORT
+- Supported formats:
+  - PDF
+  - PNG
+  - JPEG
+  - EPS
+
+FIGURE HANDLING
+- Store figures in memory as binary blobs
+- Send PDF figures directly to frontend (preserves quality, no pixelation on zoom)
+- Convert EPS → PNG if needed
+- PNG/JPEG sent as-is
+- Maintain mapping:
+{
+  "label": "fig:architecture",
+  "path": "figures/arch.pdf",
+  "caption": "...",
+  "format": "pdf",
+  "data": base64_encoded_binary
+}
+
+────────────────────────────────────────
+LLM MODELS & CONFIGURATION
+────────────────────────────────────────
+
+SUMMARIZER MODEL
+- Model: anthropic/claude-opus-4.5 (via OpenRouter)
+- Purpose: Full, detailed analysis of entire paper with all nuances
+- Input:
+  - User knowledge text
+  - Full directory tree (paths + contents)
+  - Explicit instruction:
+    "You have access to the entire LaTeX source tree.
+     Files may be nested. Figures may appear anywhere.
+     Use paths to reason about structure."
+
+SUMMARIZER OUTPUT
+{
+  "concepts": [
+    {
+      "id": 1,
+      "title": "...",
+      "core_idea": "...",
+      "required_background": "...",
+      "relevant_files": ["sections/method.tex"],
+      "relevant_figures": ["fig:architecture"]
+    }
+  ]
+}
+
+DIALOGUE MODEL
+- Model: anthropic/claude-sonnet-4.5 (via OpenRouter)
+- Purpose: Interactive tutoring and concept exploration
+- Adapts to user knowledge and previous responses
+
+────────────────────────────────────────
+DIALOGUE ENGINE
+────────────────────────────────────────
+
+STATE
+{
+  current_concept_index: int,
+  attempts: int,
+  mastery: "unknown" | "partial" | "sufficient"
+}
+
+LOGIC
+- Questions adapt to:
+  - user knowledge text
+  - previous answers
+- Avoid explaining concepts listed in user knowledge unless needed
+- Reference figures explicitly when helpful
+- Guide user through paper concepts interactively
+
+END
+- All concepts complete
+- Session state deleted from memory
+
+────────────────────────────────────────
+SECURITY & PRIVACY
+────────────────────────────────────────
+
+- No cookies
+- No analytics
+- No persistence
+- No logs
+- All data destroyed at session end
+
+────────────────────────────────────────
+DOMAIN & DEPLOYMENT
+────────────────────────────────────────
+
+DNS
+- readiscover.7vik.io → GitHub Pages
+- api.readiscover.7vik.io → Cloudflare Worker
+
+WORDPRESS
+- No WordPress changes required
+
+────────────────────────────────────────
+NON-GOALS
+────────────────────────────────────────
+
+- No PDF annotation
+- No user accounts
+- No saved history
+- No collaboration
+
+END OF SPEC

@@ -1,0 +1,16 @@
+{
+  "name": "readiscover",
+  "version": "1.0.0",
+  "description": "Rediscover research papers through guided deep learning",
+  "main": "worker/src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": ["arxiv", "research", "ai", "education"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

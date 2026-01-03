@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Readiscover — Rediscover research through guided learning</title>
+    <link rel="stylesheet" href="styles.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="background-animation"></div>
+
+    <div class="container">
+        <!-- Initial Landing State -->
+        <div id="landing-state" class="state active">
+            <header class="landing-header">
+                <h1 class="title">Readiscover</h1>
+                <p class="tagline">Don't just read papers, <span class="magical-word">readiscover</span> them!</p>
+            </header>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="arxiv-url">arXiv Paper</label>
+                    <input
+                        type="text"
+                        id="arxiv-url"
+                        placeholder="https://arxiv.org/abs/2401.01234 or 2401.01234"
+                        autocomplete="off"
+                    >
+                    <span class="input-hint">Enter arXiv URL or paper ID</span>
+                </div>
+
+                <div class="input-group">
+                    <label for="api-key">OpenRouter API Key</label>
+                    <input
+                        type="password"
+                        id="api-key"
+                        placeholder="sk-or-v1-..."
+                        autocomplete="off"
+                    >
+                    <span class="input-hint">Your key is never stored or logged</span>
+                </div>
+
+                <div class="knowledge-editor">
+                    <div class="knowledge-header" onclick="toggleKnowledgeEditor()">
+                        <span>What I already know</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="knowledge-content expanded">
+                        <textarea id="user-knowledge" rows="8">I already know about:
+- Transformer architecture
+- Backpropagation
+- Gradient-based optimization
+- LLM inference and decoding
+- Basic probability and linear algebra</textarea>
+                        <span class="textarea-hint">Customize this so the tutor adapts to your background</span>
+                    </div>
+                </div>
+
+                <button id="begin-btn" class="primary-button">Begin Readiscovery</button>
+                <div id="error-message" class="error-message hidden"></div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="state">
+            <div class="loading-content">
+                <h2>Preparing your paper...</h2>
+                <div class="progress-steps">
+                    <div class="step" data-step="download">
+                        <div class="step-indicator"></div>
+                        <span class="step-text">Downloading arXiv source…</span>
+                    </div>
+                    <div class="step" data-step="reconstruct">
+                        <div class="step-indicator"></div>
+                        <span class="step-text">Reconstructing file tree…</span>
+                    </div>
+                    <div class="step" data-step="parse">
+                        <div class="step-indicator"></div>
+                        <span class="step-text">Parsing LaTeX…</span>
+                    </div>
+                    <div class="step" data-step="index">
+                        <div class="step-indicator"></div>
+                        <span class="step-text">Indexing figures…</span>
+                    </div>
+                    <div class="step" data-step="analyze">
+                        <div class="step-indicator"></div>
+                        <span class="step-text">Analyzing paper structure…</span>
+                    </div>
+                </div>
+
+                <div class="knowledge-editor loading-knowledge">
+                    <div class="knowledge-header" onclick="toggleKnowledgeEditor()">
+                        <span>What I already know (you can still edit this)</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="knowledge-content expanded">
+                        <textarea id="user-knowledge-loading" rows="8"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface State -->
+        <div id="chat-state" class="state">
+            <div class="chat-header">
+                <h2 class="paper-title">Paper Title</h2>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messages-container">
+                <!-- Messages will be appended here -->
+            </div>
+
+            <div class="input-container">
+                <textarea
+                    id="user-input"
+                    placeholder="Type your response..."
+                    rows="3"
+                ></textarea>
+                <button id="send-btn" class="send-button">Send</button>
+            </div>
+        </div>
+
+        <!-- Complete State -->
+        <div id="complete-state" class="state">
+            <div class="complete-content">
+                <h2>Thank you for rediscovering this paper.</h2>
+                <p class="complete-message">We hope this journey deepened your understanding.</p>
+                <button id="restart-btn" class="primary-button">Start another paper</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        Made with <span class="heart">❤️</span> by <a href="https://7vik.io" target="_blank" rel="noopener noreferrer">7vik</a>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>

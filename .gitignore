@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Node.js / JavaScript
+node_modules/
+.wrangler/
+.dev.vars
+dist/
+.DS_Store
