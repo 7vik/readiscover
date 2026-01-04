@@ -2,3 +2,4 @@ name = "readiscover-api"
 main = "worker/src/index.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
+account_id = "94cbc68c4c721275fb340468c5bbd62a"
