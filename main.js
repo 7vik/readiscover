@@ -6,7 +6,7 @@
 // Use localhost for local development (file:// protocol or localhost hostname)
 const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.protocol === 'file:')
     ? 'http://localhost:8787'
-    : 'https://api.readiscover.7vik.io';
+    : 'https://readiscover-api.zsatvik.workers.dev';
 
 // State Management
 let sessionState = {
