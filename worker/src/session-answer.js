@@ -54,10 +54,29 @@ export async function handleSessionAnswer(request, sessions, corsHeaders) {
             session.latexStructure
         );
 
-        // Add tutor response to history
+        // Extract progress percentage from tutor response
+        let progressPercentage = null;
+        let cleanedTutorResponse = tutorResponse;
+        const progressMatch = tutorResponse.match(/^PROGRESS:\s*(\d+)%/m);
+        if (progressMatch) {
+            progressPercentage = parseInt(progressMatch[1], 10);
+            // Remove the PROGRESS line from the response
+            cleanedTutorResponse = tutorResponse.replace(/^PROGRESS:\s*\d+%\s*/m, '').trim();
+        }
+
+        // Get relevant figures for this response (before removing placeholders)
+        const relevantFigures = extractReferencedFigures(
+            cleanedTutorResponse,
+            session.latexStructure.figures
+        );
+
+        // Remove figure placeholders from the message
+        cleanedTutorResponse = removeFigurePlaceholders(cleanedTutorResponse);
+
+        // Add tutor response to history (with PROGRESS line and figure placeholders removed)
         session.conversationHistory.push({
             role: 'assistant',
-            content: tutorResponse
+            content: cleanedTutorResponse
         });
 
         // Check if we should move to next concept
@@ -74,18 +93,13 @@ export async function handleSessionAnswer(request, sessions, corsHeaders) {
         const isComplete = session.currentConcept >= session.concepts.length &&
                           (shouldProgress || tutorResponse.toLowerCase().includes("complete"));
 
-        // Get relevant figures for this response
-        const relevantFigures = extractReferencedFigures(
-            tutorResponse,
-            session.latexStructure.figures
-        );
-
         // Prepare response
         const responseData = {
-            tutor_message: tutorResponse,
+            tutor_message: cleanedTutorResponse,
             current_concept: session.currentConcept,
             is_complete: isComplete,
-            figures: relevantFigures
+            figures: relevantFigures,
+            progress_percentage: progressPercentage
         };
 
         // If complete, clean up session
@@ -111,24 +125,30 @@ export async function handleSessionAnswer(request, sessions, corsHeaders) {
 }
 
 /**
- * Extract figures referenced in the tutor response
+ * Extract figures referenced in the tutor response and replace placeholders
  */
 function extractReferencedFigures(message, allFigures) {
     const referencedFigures = [];
-    const figureRegex = /fig(?:ure)?[:\s]+([a-zA-Z0-9_-]+)/gi;
 
+    // Find all {{fig:label}} patterns
+    const figurePattern = /\{\{fig:([a-zA-Z0-9_-]+)\}\}/gi;
     let match;
-    while ((match = figureRegex.exec(message)) !== null) {
+
+    while ((match = figurePattern.exec(message)) !== null) {
         const label = match[1];
-        const figure = allFigures.find(f =>
-            f.label === label ||
-            f.label === `fig:${label}` ||
-            f.label.includes(label)
-        );
+        const figure = allFigures.find(f => {
+            if (!f.label) return false;
+            return (
+                f.label === label ||
+                f.label === `fig:${label}` ||
+                f.label.includes(label) ||
+                f.label.toLowerCase().includes(label.toLowerCase())
+            );
+        });
 
         if (figure && !referencedFigures.find(f => f.label === figure.label)) {
             referencedFigures.push({
-                label: figure.label,
+                label: figure.label || null,
                 caption: figure.caption,
                 format: figure.format,
                 data: figure.base64
@@ -137,4 +157,12 @@ function extractReferencedFigures(message, allFigures) {
     }
 
     return referencedFigures;
+}
+
+/**
+ * Remove figure placeholders from message
+ */
+function removeFigurePlaceholders(message) {
+    // Remove {{fig:label}} patterns
+    return message.replace(/\{\{fig:[a-zA-Z0-9_-]+\}\}/gi, '');
 }

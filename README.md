@@ -1,196 +1,188 @@
 # Readiscover
 
-**Rediscover research papers through guided deep learning**
+> Don't just read papers—readiscover them through guided exploration
 
-Readiscover is a web application that helps researchers deeply understand arXiv papers by guiding them through an interactive, question-driven rediscovery of the paper's ideas using LLMs.
+Readiscover turns research papers into interactive learning experiences. Instead of passively reading, you're guided through a Socratic dialogue that helps you discover the paper's insights from first principles—making you a better researcher in the process.
 
-## Features
+## What makes it special?
 
-- 🎓 **Deep Paper Understanding**: Analyzes complete LaTeX source code including nested files
-- 🖼️ **Figure-Aware Learning**: Integrates paper figures directly into the learning experience
-- 🤖 **Adaptive Tutoring**: Uses Claude Opus 4.5 for detailed analysis and Claude Sonnet 4.5 for interactive dialogue
-- 🎨 **Beautiful Interface**: Distill.pub-inspired design with warm academic aesthetic
-- 🔒 **Privacy First**: No data persistence, no accounts, no analytics - everything is ephemeral
+**Deep understanding, not shallow summaries**
+Analyzes the complete LaTeX source code, including all nested files and figures. No detail is lost.
 
-## Architecture
+**Socratic guidance**
+Uses Claude to guide you through discovery with probing questions and mathematical problem setups—never spoiling the conclusions.
 
-### Frontend
-- Static single-page application (HTML/CSS/Vanilla JS)
-- Hosted on GitHub Pages
-- MathJax v3 for LaTeX rendering
-- PDF.js for figure display
+**Figure-aware learning**
+Figures appear automatically when relevant, seamlessly integrated into the conversation.
 
-### Backend
-- Cloudflare Worker
-- In-memory session management
-- arXiv source fetching and parsing
-- OpenRouter integration for LLM calls
+**Privacy-first**
+No accounts, no cookies, no analytics, no persistence. Everything disappears when you close the tab. Your API key is never stored or logged.
 
-## Setup
+**Beautiful and simple**
+A clean interface with a magical animated background. Just you and the paper.
 
-### Prerequisites
+## Quick Start
 
-- Node.js v18+
-- Cloudflare account
-- OpenRouter API key (users provide their own)
+1. Visit [readiscover.7vik.io](https://readiscover.7vik.io)
+2. Paste an arXiv paper ID (like `2401.01234`) or URL
+3. Add your OpenRouter API key (get one at [openrouter.ai](https://openrouter.ai))
+4. Click "Begin Readiscovery"
 
-### Installation
+That's it. The app downloads the paper, analyzes it with Claude Opus 4.5, and starts an interactive tutoring session with Claude Sonnet 4.5.
+
+## How it works
+
+**Frontend**: Static HTML/CSS/JS hosted on GitHub Pages. Uses MathJax for LaTeX rendering.
+
+**Backend**: Cloudflare Worker that fetches arXiv sources, parses LaTeX, extracts figures, and manages tutoring sessions via OpenRouter.
+
+**Session flow**:
+1. You submit a paper → Worker downloads and analyzes it
+2. Claude Opus identifies key concepts and creates a discovery path
+3. Claude Sonnet guides you through each concept via Socratic dialogue
+4. Figures display automatically when referenced
+5. Session ends when you've rediscovered all major ideas
+
+## Development
+
+### Local testing
 
 ```bash
 # Install dependencies
 npm install
 
-# Development
+# Start the backend worker (runs on localhost:8787)
 npm run dev
 
-# Deploy to Cloudflare
+# Open index.html in your browser
+# The frontend auto-connects to localhost:8787 when running locally
+```
+
+### Deploy
+
+**Frontend** (GitHub Pages):
+1. Push to GitHub
+2. Enable Pages in settings (main branch, root directory)
+3. Add custom domain if desired
+
+**Backend** (Cloudflare Workers):
+```bash
+npm install -g wrangler
+wrangler login
 npm run deploy
 ```
 
-### Frontend Deployment (GitHub Pages)
+Update `main.js` line 9 to point to your deployed worker URL.
 
-1. Push the repository to GitHub
-2. Enable GitHub Pages in repository settings
-3. Set source to `main` branch, root directory
-4. Configure custom domain: `readiscover.7vik.io`
-
-### Backend Deployment (Cloudflare Worker)
-
-1. Install Wrangler CLI: `npm install -g wrangler`
-2. Login to Cloudflare: `wrangler login`
-3. Deploy: `npm run deploy`
-4. Configure custom domain in Cloudflare dashboard: `api.readiscover.7vik.io`
-
-## Configuration
-
-### DNS Setup
-
-Add the following DNS records:
+### Project structure
 
 ```
-readiscover.7vik.io     CNAME    <github-pages-domain>
-api.readiscover.7vik.io CNAME    <cloudflare-worker-domain>
+readiscover/
+├── index.html              Frontend
+├── styles.css              All styling + animated background
+├── main.js                 Frontend logic + API calls
+└── worker/src/
+    ├── index.js            Worker entry point + routing
+    ├── arxiv-handler.js    Downloads & parses arXiv LaTeX
+    ├── llm-client.js       OpenRouter API + all prompts
+    ├── session-start.js    Creates new sessions
+    └── session-answer.js   Processes user responses
 ```
 
-### Environment Variables
+## API Reference
 
-No environment variables needed! Users provide their own OpenRouter API keys.
-
-## Usage
-
-1. Visit https://readiscover.7vik.io
-2. Enter an arXiv paper URL or ID (e.g., `2401.01234`)
-3. Enter your OpenRouter API key
-4. Customize your existing knowledge
-5. Click "Begin Readiscovery"
-6. Engage with the interactive dialogue to rediscover the paper
-
-## API Endpoints
-
-### POST `/session/start`
-
-Start a new learning session.
+### `POST /session/start`
+Starts a new learning session.
 
 **Request:**
 ```json
 {
   "arxiv_id": "2401.01234",
   "openrouter_api_key": "sk-or-v1-...",
-  "user_knowledge_text": "I already know about..."
+  "user_knowledge_text": "I know transformers, attention, backprop..."
 }
 ```
 
 **Response:**
 ```json
 {
-  "session_id": "uuid",
-  "paper_title": "Paper Title",
-  "total_concepts": 5,
-  "initial_message": "Welcome! Let's begin..."
+  "session_id": "uuid-v4",
+  "paper_title": "Attention Is All You Need",
+  "total_concepts": 6,
+  "initial_message": "Welcome! Let's explore this paper..."
 }
 ```
 
-### POST `/session/answer`
-
-Submit an answer and get tutor response.
+### `POST /session/answer`
+Submits your response and gets the next tutor message.
 
 **Request:**
 ```json
 {
-  "session_id": "uuid",
-  "user_answer": "I think..."
+  "session_id": "uuid-v4",
+  "user_answer": "The attention mechanism computes..."
 }
 ```
 
 **Response:**
 ```json
 {
-  "tutor_message": "Great insight! Let me follow up...",
-  "current_concept": 2,
+  "tutor_message": "Great! Now what if we...",
+  "current_concept": 3,
   "is_complete": false,
-  "figures": [...]
+  "figures": [
+    {
+      "label": "fig:architecture",
+      "caption": "The Transformer architecture",
+      "format": "pdf",
+      "data": "base64-encoded-data"
+    }
+  ]
 }
 ```
 
-## Development
+## Technical Details
 
-### Project Structure
+**LLM Models** (via OpenRouter):
+- **Claude Opus 4.5**: Deep paper analysis and concept extraction
+- **Claude Sonnet 4.5**: Interactive Socratic dialogue
 
-```
-readiscover/
-├── index.html              # Frontend HTML
-├── styles.css              # Frontend styles
-├── main.js                 # Frontend JavaScript
-├── worker/
-│   └── src/
-│       ├── index.js        # Worker entry point
-│       ├── arxiv-handler.js    # arXiv fetching & parsing
-│       ├── llm-client.js   # OpenRouter integration
-│       ├── session-start.js    # Session initialization
-│       └── session-answer.js   # Answer processing
-├── package.json
-├── wrangler.toml           # Cloudflare config
-└── README.md
-```
+**Session Management**:
+- Stored in-memory on the Cloudflare Worker
+- Auto-expires after inactivity
+- Completely ephemeral—nothing persists
 
-### Testing Locally
+**Figure Handling**:
+- Extracts all figures from LaTeX source
+- Converts to base64-encoded data
+- Displays when tutor references them (e.g., "see Figure fig:architecture")
 
-1. Start the worker: `npm run dev`
-2. Open `index.html` in a browser
-3. The frontend will automatically connect to `localhost:8787`
+## Philosophy
 
-## LLM Models
+The goal isn't to help you read papers faster—it's to help you understand them deeper. We believe the best learning happens through guided discovery, where you arrive at insights yourself instead of having them handed to you.
 
-- **Summarizer**: `anthropic/claude-opus-4.5` - Full detailed paper analysis
-- **Dialogue**: `anthropic/claude-sonnet-4.5` - Interactive tutoring
+That's why the prompts emphasize:
+- Starting from first principles
+- Mathematical problem formulation
+- Socratic questioning
+- Never spoiling conclusions
+- Building researcher intuition
 
-Both accessed via OpenRouter API.
+## Privacy Commitment
 
-## Privacy & Security
+- Zero cookies
+- Zero analytics
+- Zero persistence
+- Zero server logs
+- Your API key stays in memory during your session and vanishes when done
+- No data leaves your browser except API calls to OpenRouter
 
-- ✅ No cookies
-- ✅ No analytics
-- ✅ No persistence
-- ✅ No logs
-- ✅ All data destroyed at session end
-- ✅ API keys never stored or logged
-
-## Target Users
-
-~10 trusted researchers at a time. Each provides their own OpenRouter API key.
+Built for ~10 trusted researchers at a time. Not a commercial product.
 
 ## License
 
 MIT
 
-## Contributing
-
-This is a personal project for a small group of researchers. Not accepting contributions at this time.
-
-## Support
-
-For issues or questions, please open an issue on GitHub.
-
 ---
 
-Built with ❤️ for deep research understanding
+Made with care by [7vik](https://7vik.io)

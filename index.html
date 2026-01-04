@@ -4,11 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Readiscover — Rediscover research through guided learning</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // Configure MathJax before loading
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                packages: {'[+]': ['ams', 'array', 'tabular']},
+                tags: 'ams',
+                processEnvironments: true,
+                processRefs: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'message-content'
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady();
+                }
+            }
+        };
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
-    <div class="background-animation"></div>
+    <div class="background-animation">
+        <div class="five-pointed-stars">
+            <svg class="star star-1" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.6"/>
+            </svg>
+            <svg class="star star-2" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.5"/>
+            </svg>
+            <svg class="star star-3" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.7"/>
+            </svg>
+            <svg class="star star-4" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.4"/>
+            </svg>
+            <svg class="star star-5" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.6"/>
+            </svg>
+            <svg class="star star-6" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.5"/>
+            </svg>
+            <svg class="star star-7" viewBox="0 0 51 48">
+                <path d="M25.5 0L31.5 18H51L35.5 29L41.5 48L25.5 37L9.5 48L15.5 29L0 18H19.5L25.5 0Z" fill="white" opacity="0.5"/>
+            </svg>
+        </div>
+        <div class="river"></div>
+        <div class="planets">
+            <div class="planet planet-1"></div>
+            <div class="planet planet-2"></div>
+            <div class="planet planet-3"></div>
+            <div class="planet planet-4"></div>
+        </div>
+        <div class="shooting-stars">
+            <div class="shooting-star"></div>
+            <div class="shooting-star"></div>
+            <div class="shooting-star"></div>
+        </div>
+    </div>
 
     <div class="container">
         <!-- Initial Landing State -->
@@ -41,22 +101,6 @@
                     <span class="input-hint">Your key is never stored or logged</span>
                 </div>
 
-                <div class="knowledge-editor">
-                    <div class="knowledge-header" onclick="toggleKnowledgeEditor()">
-                        <span>What I already know</span>
-                        <span class="toggle-icon">▼</span>
-                    </div>
-                    <div class="knowledge-content expanded">
-                        <textarea id="user-knowledge" rows="8">I already know about:
-- Transformer architecture
-- Backpropagation
-- Gradient-based optimization
-- LLM inference and decoding
-- Basic probability and linear algebra</textarea>
-                        <span class="textarea-hint">Customize this so the tutor adapts to your background</span>
-                    </div>
-                </div>
-
                 <button id="begin-btn" class="primary-button">Begin Readiscovery</button>
                 <div id="error-message" class="error-message hidden"></div>
             </div>
@@ -66,32 +110,29 @@
         <div id="loading-state" class="state">
             <div class="loading-content">
                 <h2>Preparing your paper...</h2>
-                <div class="progress-steps">
-                    <div class="step" data-step="download">
-                        <div class="step-indicator"></div>
-                        <span class="step-text">Downloading arXiv source…</span>
+
+                <!-- Fun fact box -->
+                <div class="fun-fact-box">
+                    <div class="fun-fact-label">Did you know?</div>
+                    <div id="fun-fact-text" class="fun-fact-text"></div>
+                </div>
+
+                <!-- Single progress step container -->
+                <div class="single-progress-step">
+                    <div class="step-circle">
+                        <svg class="circle-svg" viewBox="0 0 100 100">
+                            <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+                            <circle class="circle-progress" cx="50" cy="50" r="45"></circle>
+                        </svg>
                     </div>
-                    <div class="step" data-step="reconstruct">
-                        <div class="step-indicator"></div>
-                        <span class="step-text">Reconstructing file tree…</span>
-                    </div>
-                    <div class="step" data-step="parse">
-                        <div class="step-indicator"></div>
-                        <span class="step-text">Parsing LaTeX…</span>
-                    </div>
-                    <div class="step" data-step="index">
-                        <div class="step-indicator"></div>
-                        <span class="step-text">Indexing figures…</span>
-                    </div>
-                    <div class="step" data-step="analyze">
-                        <div class="step-indicator"></div>
-                        <span class="step-text">Analyzing paper structure…</span>
+                    <div class="step-text-container">
+                        <span id="current-step-text" class="current-step-text">Downloading arXiv source…</span>
                     </div>
                 </div>
 
                 <div class="knowledge-editor loading-knowledge">
                     <div class="knowledge-header" onclick="toggleKnowledgeEditor()">
-                        <span>What I already know (you can still edit this)</span>
+                        <span>What I already know</span>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <div class="knowledge-content expanded">
@@ -122,7 +163,10 @@
                     placeholder="Type your response..."
                     rows="3"
                 ></textarea>
-                <button id="send-btn" class="send-button">Send</button>
+                <div class="button-group">
+                    <button id="skip-btn" class="skip-button">Skip this</button>
+                    <button id="send-btn" class="send-button">Send</button>
+                </div>
             </div>
         </div>
 
@@ -137,7 +181,7 @@
     </div>
 
     <footer class="footer">
-        Made with <span class="heart">❤️</span> by <a href="https://7vik.io" target="_blank" rel="noopener noreferrer">7vik</a>
+        Made with <span class="heart">❤</span> by <a href="https://7vik.io" target="_blank" rel="noopener noreferrer">7vik</a>
     </footer>
 
     <script src="main.js"></script>

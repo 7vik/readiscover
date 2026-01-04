@@ -60,7 +60,8 @@ export async function handleSessionStart(request, sessions, corsHeaders) {
             openrouter_api_key,
             concepts,
             latexStructure.title,
-            user_knowledge_text || ''
+            user_knowledge_text || '',
+            latexStructure
         );
 
         // Store session in memory
